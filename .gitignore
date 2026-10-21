@@ -19,3 +19,5 @@ staticfiles_build/
 .DS_Store
 .idea/
 .vscode/
+*.sqlite3
+db.sqlite3

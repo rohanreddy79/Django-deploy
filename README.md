@@ -33,7 +33,7 @@ This is a small server-rendered polling application. Users register and log in w
 | `vercel.json`, `build_files.sh` | Builds `poll/wsgi.py` with `@vercel/python` (python3.9, 15 MB lambda) and runs `pip install` + `collectstatic` as a `@vercel/static-build` step; routes `/static/*` to the built files and everything else to WSGI |
 | `requirements.txt` | `Django==4.0.4`, `djangorestframework==3.13.1`, `asgiref`, `pytz`, `sqlparse`, `tzdata` (all pinned) |
 | `.github/workflows/ci.yml` | GitHub Actions: Python 3.10, `pip install -r requirements.txt`, `python -m compileall -q .`, `manage.py check`, `manage.py test` |
-| `db.sqlite3` | A committed SQLite database with the auth, sessions and `questions` migrations applied and a few sample rows; it is the default database file |
+| `db.sqlite3` | Created by `python manage.py migrate`; not tracked (the original repository committed a sample database with user rows, removed in 2026-10) |
 
 Key design points: every model row has a UUID primary key, so poll links are unguessable; percentages are computed on the fly from `counter` rather than stored; the vote endpoint is JSON and needs no login, only the CSRF token the vote page hands to its own JavaScript.
 
@@ -74,7 +74,7 @@ Deploying: `vercel` from the repo root uses `vercel.json` as-is (not verified he
 - Anyone with a question's UUID can vote any number of times: the API checks the CSRF token, not a per-voter session, and the page does not remember a previous vote.
 - The vote page renders at most four selectable options (the template hard-codes `opt-1` … `opt-4` inputs), and `Answers` rows are returned in insertion order rather than an explicit ordering.
 - No logout view exists; the sidebar's "Logout" link is a placeholder, as are the sidebar name/email in the templates.
-- The committed `db.sqlite3` is the default database, so running locally without `DJANGO_DB_PATH` modifies a tracked file.
+- The database file is not tracked; run `python manage.py migrate` once before `runserver`.
 - SQLite on Vercel's read-only filesystem does not persist writes (see Deploying).
 
 ## Changelog
