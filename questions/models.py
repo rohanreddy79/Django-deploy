@@ -27,6 +27,8 @@ class Question(BaseModel):
             total_votes += answer.counter
         
         payload = []
+        if total_votes == 0:
+            return [0 for _ in answers]
         for answer in answers:
             payload.append(int((answer.counter / total_votes) * 100))
 

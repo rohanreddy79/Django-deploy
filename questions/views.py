@@ -2,11 +2,11 @@ from cmath import log
 from django.shortcuts import redirect, render
 
 from questions.models import Answers, Question
-from rest_framework.decorators import api_view
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.response import Response
-from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
-from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate , login
 from django.http import HttpResponse
@@ -14,8 +14,6 @@ from django.http import HttpResponse
 
 from django.contrib import messages
 def login_view(request):
-    return HttpResponse("<h1> Hey This is Rohan Reddy </h1>")
-   # messages.info(request, 'Account not found')
     if request.method == 'POST':
         email = request.POST.get('email')
         password = request.POST.get('password')
@@ -58,11 +56,13 @@ def register_view(request):
 
 
 
+@login_required
 def dashboard(request):
 
     return render(request , 'dashboard.html')
 
 
+@login_required
 def create_poll(request):
 
     if request.method == 'POST':
@@ -86,19 +86,32 @@ def create_poll(request):
 
 
 
+@login_required
 def see_answers(request):
     questions = Question.objects.filter(user = request.user)
-    return render(request ,'see_ansswers.html' ,{'questions' : questions})
+    return render(request ,'see_answers.html' ,{'questions' : questions})
+
+
+class CsrfSessionAuthentication(SessionAuthentication):
+    """Session authentication that enforces the CSRF check for anonymous voters too.
+
+    DRF's SessionAuthentication only checks CSRF for logged-in users; the public vote page
+    is anonymous, so the token sent in the X-CSRFToken header is validated unconditionally.
+    """
+
+    def authenticate(self, request):
+        self.enforce_csrf(request)
+        return super().authenticate(request)
 
 
 @api_view(['POST'])
-@csrf_exempt
+@authentication_classes([CsrfSessionAuthentication])
 def save_question_result(request):
     data = request.data
     question_uid = data.get('question_uid')
     answer_uid = data.get('answer_uid')
 
-    if question_uid is None and answer_uid is None:
+    if question_uid is None or answer_uid is None:
         payload = {'data' : 'both question uid and answer uid are required' , 'status' : False}
 
         return Response(payload)
@@ -124,4 +137,4 @@ def question_detail(request , question_uid):
 
     except Exception as e :
         print(e)
-        # return redirect('/')
+        return redirect('/')
