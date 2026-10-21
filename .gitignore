@@ -1,5 +1,21 @@
+# Python
 __pycache__/
 *.py[cod]
+*.egg-info/
 .venv/
+venv/
+.env
+
+# Django
 staticfiles_build/
+*.sqlite3-journal
+/media/
+*.log
+
+# Vercel
+.vercel/
+
+# OS / editors
 .DS_Store
+.idea/
+.vscode/
